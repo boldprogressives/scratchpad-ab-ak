@@ -27,6 +27,9 @@ class ActionKitEventNotification < EventNotification
     out[:user_employer] = contribution.employer
     out[:email] = contribution.email
     out[:phone] = contribution.phone
+    out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
+    out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
+    out[:opt_in] = target_config.opt_in.to_s unless target_config.opt_in.nil?
 
     # @@TODO: find out what these 3 fields actually mean
     # 1. the first of the 3, I think the highest-level identifier
@@ -39,19 +42,17 @@ class ActionKitEventNotification < EventNotification
     # yes, we are still going to do this the exact same way
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
-    
+
+    # collecting the lines that will need to be edited to work with stubs    
     out[:action_recipient_name] = lineitem.entity.committeename
     out[:action_recipient_id] = lineitem.entity_id.to_s
-    out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
-    out[:opt_in] = target_config.opt_in.to_s unless target_config.opt_in.nil?
+    out[:donation_amount] = lineitem.amount.to_dollars(:commify => false)
+
  
     # @@TODO: right now this will create a lot of core_order records without 
     # clarifying orderdetail information like the recipient candidate.
     # DO NOT USE in this form.
     
-    out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
-    out[:donation_amount] = lineitem.amount.to_dollars(:commify => false)
-
     out.delete_if{|k,v| v.nil? }
     out
   end
