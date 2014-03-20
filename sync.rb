@@ -27,12 +27,6 @@ class ActionKitEventNotification < EventNotification
     out[:user_employer] = contribution.employer
     out[:email] = contribution.email
     out[:phone] = contribution.phone
-    out[:action_employer_address1] = contribution.empaddr1
-    out[:action_employer_address2] = contribution.empaddr2
-    out[:action_employer_city] = contribution.empcity
-    out[:action_employer_state] = contribution.empstate
-    out[:action_employer_zip] = contribution.empzip
-    out[:action_employer_country] = contribution.empcountry
     
     # yes, we are still going to do this the exact same way
     out[:action_recurrence_number] = lineitem.sequence.to_s
