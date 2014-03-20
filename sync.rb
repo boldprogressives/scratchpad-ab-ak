@@ -43,16 +43,11 @@ class ActionKitEventNotification < EventNotification
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
 
-    # collecting the lines that will need to be edited to work with stubs    
-    out[:action_recipient_name] = lineitem.entity.committeename
-    out[:action_recipient_id] = lineitem.entity_id.to_s
-    out[:donation_amount] = lineitem.amount.to_dollars(:commify => false)
-
- 
-    # @@TODO: right now this will create a lot of core_order records without 
-    # clarifying orderdetail information like the recipient candidate.
-    # DO NOT USE in this form.
-    
+    lookups = order_lookups(out.page)   # @@TODO: function checks AK page and builds lookup
+    contribution.lineitems.each do line # table/function for ab-entity-to-ak-page-order
+      out["donation_#{lookups(line)}"] = line.amount.to_dollars(:commify => false)
+      # if there were products we would handle that here too I think
+     
     out.delete_if{|k,v| v.nil? }
     out
   end
