@@ -1,11 +1,4 @@
 class ActionKitEventNotification < EventNotification
-  def page_name
-    if lineitem.contribution.list_id
-      "ab_#{lineitem.contribution.list_id}_#{lineitem.entity_id}"
-    else
-      "ab_#{lineitem.entity_id}"
-    end
-  end
  
   def page_title
     if lineitem.contribution.list_id
@@ -17,7 +10,7 @@ class ActionKitEventNotification < EventNotification
  
   def page_parms
     out = {}
-    out[:name] = page_name
+    out[:name] = "ab_#{contribution.list ? contribution.list.name : 'no_page_name'}"
     out[:title] = page_title
     out[:lists] = target_config.lists.gsub(/ /, '') if target_config.lists.present?
     out[:tags] = target_config.tag_ids if target_config.tag_ids
@@ -26,7 +19,7 @@ class ActionKitEventNotification < EventNotification
  
   def donation_parms
     out = {}
-    out[:page] = page_name
+    out[:page] = "ab_#{contribution.list ? contribution.list.name : 'no_page_name'}"
     out[:action_recipient] = lineitem.entity.displayname
     out[:source]=contribution.refcode
     out[:mailing_id]=contribution.refcode2
@@ -48,11 +41,9 @@ class ActionKitEventNotification < EventNotification
     out[:action_employer_state] = contribution.empstate
     out[:action_employer_zip] = contribution.empzip
     out[:action_employer_country] = contribution.empcountry
-    out[:action_actbluepage] = contribution.list ? contribution.list.name : 'None'
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
     out[:action_check_id] = contribution.checknumber
-    out[:action_page] = contribution.list ? contribution.list.name : 'None'
     out[:action_recipient_name] = lineitem.entity.committeename
     out[:action_recipient_id] = lineitem.entity_id.to_s
     out[:action_recipient_fecid] = lineitem.entity.fecid.present? ? lineitem.entity.fecid : 'None'
