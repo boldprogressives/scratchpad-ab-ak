@@ -27,24 +27,28 @@ class ActionKitEventNotification < EventNotification
     out[:user_employer] = contribution.employer
     out[:email] = contribution.email
     out[:phone] = contribution.phone
-    
+
+    # @@TODO: find out what these 3 fields actually mean
+    # 1. the first of the 3, I think the highest-level identifier
+    out[:action_actblue_contribution_id] = contribution.order_number
+    #2. the second of the 3, I think the second most specific
+    out[:donation_import_id] = "actblue#{lineitem.id}"
+    #3. the most specific. 1 per swipe-part per recurrence ??
+    out[:action_payment_id] = lineitem.payment_id.to_s
+
     # yes, we are still going to do this the exact same way
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
     
     out[:action_recipient_name] = lineitem.entity.committeename
     out[:action_recipient_id] = lineitem.entity_id.to_s
-    out[:action_payment_id] = lineitem.payment_id.to_s
-    out[:action_actblue_contribution_id] = contribution.order_number
     out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
     out[:opt_in] = target_config.opt_in.to_s unless target_config.opt_in.nil?
-    record_id = "actblue#{lineitem.id}"
-
+ 
     # @@TODO: right now this will create a lot of core_order records without 
     # clarifying orderdetail information like the recipient candidate.
     # DO NOT USE in this form.
     
-    out[:donation_import_id] = record_id
     out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
     out[:donation_amount] = lineitem.amount.to_dollars(:commify => false)
 
