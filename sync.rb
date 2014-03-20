@@ -45,16 +45,15 @@ class ActionKitEventNotification < EventNotification
     out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
     out[:opt_in] = target_config.opt_in.to_s unless target_config.opt_in.nil?
     record_id = "actblue#{lineitem.id}"
-    if target_config.entity_ids && target_config.entity_ids.include?(lineitem.entity_id)
-      #if this contribution is to the owner of this notification (i.e. to the PCCC on a PCCC page)
-      out[:donation_import_id] = record_id
-      out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
-      out[:donation_amount] = lineitem.amount.to_dollars(:commify => false)
-    else
-      out[:action_actblueid] = record_id
-      out[:action_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
-      out[:action_amount] = lineitem.amount.to_dollars(:commify => false)
-    end
+
+    # @@TODO: right now this will create a lot of core_order records without 
+    # clarifying orderdetail information like the recipient candidate.
+    # DO NOT USE in this form.
+    
+    out[:donation_import_id] = record_id
+    out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
+    out[:donation_amount] = lineitem.amount.to_dollars(:commify => false)
+
     out.delete_if{|k,v| v.nil? }
     out
   end
