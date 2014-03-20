@@ -1,17 +1,9 @@
 class ActionKitEventNotification < EventNotification
  
-  def page_title
-    if lineitem.contribution.list_id
-      "[ActBlue] #{lineitem.contribution.list.title} #{lineitem.entity.displayname}"
-    else
-      "[ActBlue] #{lineitem.entity.displayname}"
-    end
-  end
- 
   def page_parms
     out = {}
     out[:name] = "ab_#{contribution.list ? contribution.list.name : 'no_page_name'}"
-    out[:title] = page_title
+    out[:title] = "[AB] #{lineitem.contribution.list.title}"
     out[:lists] = target_config.lists.gsub(/ /, '') if target_config.lists.present?
     out[:tags] = target_config.tag_ids if target_config.tag_ids
     out
