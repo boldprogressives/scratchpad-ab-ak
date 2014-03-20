@@ -43,8 +43,11 @@ class ActionKitEventNotification < EventNotification
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
 
-    lookups = order_lookups(out.page)   # @@TODO: function checks AK page and builds lookup
-    contribution.lineitems.each do line # table/function for ab-entity-to-ak-page-order
+    # @@TODO: write an actual function `order_lookups` to return a lookup function for any given page
+    # which will show the ActionKit page order for any committee in this contribution
+    
+    lookups = order_lookups(out.page)   
+    contribution.lineitems.each do line 
       out["donation_#{lookups(line)}"] = line.amount.to_dollars(:commify => false)
       # if there were products we would handle that here too I think
      
