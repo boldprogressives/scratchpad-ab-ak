@@ -33,8 +33,11 @@ class ActionKitEventNotification < EventNotification
     out[:action_employer_state] = contribution.empstate
     out[:action_employer_zip] = contribution.empzip
     out[:action_employer_country] = contribution.empcountry
+    
+    # yes, we are still going to do this the exact same way
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
+    
     out[:action_recipient_name] = lineitem.entity.committeename
     out[:action_recipient_id] = lineitem.entity_id.to_s
     out[:action_payment_id] = lineitem.payment_id.to_s
