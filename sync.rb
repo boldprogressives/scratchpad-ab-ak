@@ -35,13 +35,9 @@ class ActionKitEventNotification < EventNotification
     out[:action_employer_country] = contribution.empcountry
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
-    out[:action_check_id] = contribution.checknumber
     out[:action_recipient_name] = lineitem.entity.committeename
     out[:action_recipient_id] = lineitem.entity_id.to_s
-    out[:action_recipient_fecid] = lineitem.entity.fecid.present? ? lineitem.entity.fecid : 'None'
-    out[:action_recipient_election] = lineitem.entity.candidacy ? lineitem.entity.candidacy.name : 'None'
     out[:action_payment_id] = lineitem.payment_id.to_s
-    out[:action_fee] = lineitem.fee.to_dollars(:commify => false)
     out[:action_actblue_contribution_id] = contribution.order_number
     out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
     out[:opt_in] = target_config.opt_in.to_s unless target_config.opt_in.nil?
