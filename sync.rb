@@ -28,6 +28,18 @@ class ActionKitEventNotification < EventNotification
   
   def donation_parms
     # this section will be run once per donation, not N-times for N lineitems.
+    if lineitem.sequence.to_s > 1 
+
+      # unwritten function
+      action_id = lookup_actionid_by_importid("actblue#{contribution.order_number}")
+
+      if action_id is not null
+
+        # unwritten function
+        update_action({'action_recurrence_number': lineitem.sequence.to_s }) 
+
+        return # DO NOT add a line to the import spreadsheet
+      end 
     out = {}
     out[:page] = "ab_#{contribution.list ? contribution.list.name : 'no_page_name'}"
     out[:action_recipient] = lineitem.entity.displayname
