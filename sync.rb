@@ -62,9 +62,11 @@ class ActionKitEventNotification < EventNotification
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
 
-    # here is the only part we actually have to loop over per-line-item.
-    # this way of doing the loop doesn't create multiple actions per lineitem, it simply uses
-
+    # here is the only part we actually have to loop over per-line-item. this way of doing the loop
+    # doesn't create multiple actions per lineitem, it simply uses columns like candidate_102 to 
+    # target contributions to the candidate whose ID in AK is 102. core_order_detail records should
+    # be created correctly using the existing import file method.
+    
     contribution.lineitems.each do lineitem 
       out["candidate_#{lineitem.akid}"] = lineitem.amount.to_dollars(:commify => false)
     end
