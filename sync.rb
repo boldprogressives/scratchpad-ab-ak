@@ -66,6 +66,7 @@ class ActionKitEventNotification < EventNotification
     # should make sure we're using the datestamps of the original action (in case this is a second
     # recurrence making up for an initial error on the first pass (edge case)).
     
+    # use donation.created_at or donation.lineitems[0].created_at for both of these? what's the difference?
     out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
     out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
 
