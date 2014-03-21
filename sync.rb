@@ -27,7 +27,7 @@ class ActionKitEventNotification < EventNotification
   #
   
   def donation_parms
-    # this section will be run once per donation, not N-times for N lineitems.
+    
     if lineitem.sequence.to_s > 1 
 
       # unwritten function
@@ -40,6 +40,8 @@ class ActionKitEventNotification < EventNotification
 
         return # DO NOT add a line to the import spreadsheet
       end 
+
+    # this section will be run once per donation, not N-times for N lineitems.  
     out = {}
     out[:page] = "ab_#{contribution.list ? contribution.list.name : 'no_page_name'}"
     out[:action_recipient] = lineitem.entity.displayname
@@ -57,9 +59,14 @@ class ActionKitEventNotification < EventNotification
     out[:user_employer] = contribution.employer
     out[:email] = contribution.email
     out[:phone] = contribution.phone
+    out[:opt_in] = target_config.opt_in.to_s unless target_config.opt_in.nil?
+    
+    # make sure to use properties of the "donation" object instead
+    # should make sure we're using the datestamps of the original action (in case this is a second
+    # recurrence making up for an initial error on the first pass (edge case)).
+    
     out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
     out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
-    out[:opt_in] = target_config.opt_in.to_s unless target_config.opt_in.nil?
 
     # @@TODO: find out what these 3 fields actually mean
     # 1. the first of the 3, I think the highest-level identifier
@@ -70,15 +77,11 @@ class ActionKitEventNotification < EventNotification
     #3. the most specific. 1 per swipe-part per recurrence ??
     out[:action_payment_id] = lineitem.payment_id.to_s
 
-    # yes, we are still going to do this the exact same way
-    out[:action_recurrence_number] = lineitem.sequence.to_s
+    # okay, we are not really changing the way this works. just this function only runs the first recurrence.
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
+    out[:action_recurrence_number] = lineitem.sequence.to_s # this should only ever be '1' unless there was an error
 
-    # here is the only part we actually have to loop over per-line-item. this way of doing the loop
-    # doesn't create multiple actions per lineitem, it simply uses columns like candidate_102 to 
-    # target contributions to the candidate whose ID in AK is 102. core_order_detail records should
-    # be created correctly using the existing import file method.
-    
+    # here is the only part we actually have to loop over per-line-item.     
     contribution.lineitems.each do lineitem 
       out["candidate_#{lineitem.akid}"] = lineitem.amount.to_dollars(:commify => false)
     end
