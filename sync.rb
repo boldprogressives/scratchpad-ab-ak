@@ -1,5 +1,15 @@
 class ActionKitEventNotification < EventNotification
  
+  def candidate_parms
+    out = {}
+    out[:name] = lineitem.entity_name # make sure this named correctly, the candidate/committee's actual name
+    out[:description] = lineitem.entity_description # if applicable 
+    out[:portrain_url] = target_config.lists.gsub(/ /, '') if target_config.lists.present?
+    # out[:hidden] = don't really set this, but it's available
+    # out[:stub_id] = open question how we set this via API
+    out
+  end
+  
   def page_parms
     out = {}
     out[:name] = "ab_#{contribution.list ? contribution.list.name : 'no_page_name'}"
@@ -9,7 +19,15 @@ class ActionKitEventNotification < EventNotification
     out
   end
  
+  # donation_parms
+  #
+  # change something, so we're only running 'donation parms' once per contribution
+  # instead of once per lineitem. this function now assume contribution.lineitems
+  # is an array or list of all lineitems, and no longer access lineitem directly
+  #
+  
   def donation_parms
+    # this section will be run once per donation, not N-times for N lineitems.
     out = {}
     out[:page] = "ab_#{contribution.list ? contribution.list.name : 'no_page_name'}"
     out[:action_recipient] = lineitem.entity.displayname
@@ -34,6 +52,7 @@ class ActionKitEventNotification < EventNotification
     # @@TODO: find out what these 3 fields actually mean
     # 1. the first of the 3, I think the highest-level identifier
     out[:action_actblue_contribution_id] = contribution.order_number
+
     #2. the second of the 3, I think the second most specific
     out[:donation_import_id] = "actblue#{lineitem.id}"
     #3. the most specific. 1 per swipe-part per recurrence ??
@@ -43,13 +62,12 @@ class ActionKitEventNotification < EventNotification
     out[:action_recurrence_number] = lineitem.sequence.to_s
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
 
-    # @@TODO: write an actual function `order_lookups` to return a lookup function for any given page
-    # which will show the ActionKit page order for any committee in this contribution
-    
-    lookups = order_lookups(out.page)   
-    contribution.lineitems.each do line 
-      out["donation_#{lookups(line)}"] = line.amount.to_dollars(:commify => false)
-      # if there were products we would handle that here too I think
+    # here is the only part we actually have to loop over per-line-item.
+    # this way of doing the loop doesn't create multiple actions per lineitem, it simply uses
+
+    contribution.lineitems.each do lineitem 
+      out["candidate_#{lineitem.akid}"] = lineitem.amount.to_dollars(:commify => false)
+    end
      
     out.delete_if{|k,v| v.nil? }
     out
@@ -59,9 +77,18 @@ class ActionKitEventNotification < EventNotification
     begin
       conn = target_config.actionkit_connection
  
+      # function save_or_create_candidate: an un-written function to ensure all the 
+      # candidate's (recipient committees) are represented in the ActionKit database,
+      # and that our `lineitem` object is aware of each recipient's `core_candidate.id`
+      #  value in order to construct the donation import correctly.
+      candidate_rec = conn.save_or_create_candidate(candidate_parms)
+      # after running this function, we assume the existence of a `lineitem.akid` which
+      # represents the corresponding record in the AK database.
+      
       page_rec = conn.save_or_create_page(page_parms)
- 
+
       conn.record_donation(page_rec["id"], donation_parms)
+      
       self.status = "success"
       self.response_string = conn.last_response_body
     rescue Exception => e
