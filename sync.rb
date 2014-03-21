@@ -4,9 +4,8 @@ class ActionKitEventNotification < EventNotification
     out = {}
     out[:name] = lineitem.entity_name # make sure this named correctly, the candidate/committee's actual name
     out[:description] = lineitem.entity_description # if applicable 
-    out[:portrain_url] = target_config.lists.gsub(/ /, '') if target_config.lists.present?
+    out[:portrain_url] = lineitem.entity_photo # if applicable
     # out[:hidden] = don't really set this, but it's available
-    # out[:stub_id] = open question how we set this via API
     out
   end
   
