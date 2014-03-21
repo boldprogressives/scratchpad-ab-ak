@@ -25,6 +25,7 @@ class ActionKitEventNotification < EventNotification
   # instead of once per lineitem. this function now assume contribution.lineitems
   # is an array or list of all lineitems, and no longer access lineitem directly
   #
+    
   
   def donation_parms
     
@@ -68,15 +69,10 @@ class ActionKitEventNotification < EventNotification
     out[:donation_date] = lineitem.created_at.utc.strftime("%-m/%-d/%y %H:%M")
     out[:created_at] = lineitem.payment.effective_on.utc.strftime("%-m/%-d/%y %H:%M") if lineitem.payment && lineitem.payment.effective_on
 
-    # @@TODO: find out what these 3 fields actually mean
-    # 1. the first of the 3, I think the highest-level identifier
-    out[:action_actblue_contribution_id] = contribution.order_number
-
-    #2. the second of the 3, I think the second most specific
-    out[:donation_import_id] = "actblue#{lineitem.id}"
-    #3. the most specific. 1 per swipe-part per recurrence ??
-    out[:action_payment_id] = lineitem.payment_id.to_s
-
+    # This will be the one canonical import ID, one per order, regardless of the number of
+    # candidates, recurrences, lineitems, or whathaveyous involved. 
+    out[:donation_import_id] = "ab_#{contribution.order_number}"
+    
     # okay, we are not really changing the way this works. just this function only runs the first recurrence.
     out[:action_recurrence_total_months] = contribution.recurringtimes.to_s if contribution.recurringtimes > 1
     out[:action_recurrence_number] = lineitem.sequence.to_s # this should only ever be '1' unless there was an error
@@ -84,6 +80,8 @@ class ActionKitEventNotification < EventNotification
     # here is the only part we actually have to loop over per-line-item.     
     contribution.lineitems.each do lineitem 
       out["candidate_#{lineitem.akid}"] = lineitem.amount.to_dollars(:commify => false)
+      out[:action_lineitem_ids] += lineitem.id + ','
+      out[:action_payment_ids] += lineitem.to_s + ','
     end
      
     out.delete_if{|k,v| v.nil? }
